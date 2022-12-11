@@ -1,0 +1,218 @@
+---
+title: "PC4_SofiaDager"
+output: html_document
+date: "2022-11-24"
+---
+
+
+### SOFIA DAGER
+
+### PREGUNTA 1: Correlacion
+
+```{r}
+library(rio)
+data = import ("data_final_vf.xlsx")
+```
+
+Alistamos los datos 
+
+```{r}
+summary(data$anemia_2017)
+summary(data$PBI_percapita_2017)
+summary(data$gasto_educacion_total_2017)
+```
+
+vemos NA's asi que debemos eliminarlos para poder hacer nuestra prueba de correlación.
+
+```{r}
+data1 = data[complete.cases(data$anemia_2017),] 
+
+```
+
+```{r}
+data2 = data1[complete.cases(data1$PBI_percapita_2017),] 
+```
+
+```{r}
+data = data2[complete.cases(data2$gasto_educacion_total_2017),] 
+```
+
+```{r}
+summary(data$anemia_2017)
+summary(data$PBI_percapita_2017)
+summary(data$gasto_educacion_total_2017)
+```
+Ahora que hemos eliminado los NA's podemos seguir con las correlaciones
+
+**EJERCICIO 1**
+
+```{r}
+library(nortest)
+```
+
+```{r}
+lillie.test(data$anemia_2017) 
+lillie.test(data$PBI_percapita_2017) 
+```
+el p-value de ambos es menor a 0.05 por lo tanto se rechaza la hipótesis alternativa y afirmamos que sí hay normalidad en los datos 
+
+```{r}
+cor.test(data$anemia_2017,data$PBI_percapita_2017, method = "spearman")
+```
+El p-value es menor a 0.05.
+Podemos afirmar que sí hay correlación (negativa) entre el PBI percápita y la anemia en el año 2017 esta es -08590. Es negativa e inversa, pero alta. Esto tiene sentido porque mientras menos dinero tienen las familias, pueden comprar menos productos para alimentar a su familia y por lo tanto, los niños pueden desarrollar anemia (por falta de nutrientes). Por ejemplo, productos como la carne (fuerte fuente de hierro) son caras y familias con menos recursos puede que no tengan oportunidades para adquirirlas. Tambien se puede ver como: si aumenta el PBI, disminuye la anemia. 
+
+**EJERCICIO 2**
+
+```{r}
+lillie.test(data$anemia_2017) 
+lillie.test(data$gasto_educacion_total_2017)
+```
+el p-value de ambos es menor a 0.05 por lo tanto se rechaza la hipótesis alternativa y afirmamos que sí hay normalidad en los datos
+
+```{r}
+cor.test(data$anemia_2017,data$gasto_educacion_total_2017, method = "spearman")
+```
+Al igual que en el ejercicio anterior, en este, el p-value también es menos a 0.05. 
+Podemos afirmar que sí hay correlación (negativa) entre el gasto total y la anemia en el año 2017, es -0,203. Sin embargo, es muy pequeña. Esta correlación se puede explicar desde la perspectiva que mientras mas se gaste por alumno en la educación, podría haber menos anemia. El gobierno podría implementar mejores cafeterias con desayunos y almuerzo en los coelgios. sobre todo para los niños más pequeños, en pleno desarrollo cerebral. 
+
+### PREGUNTA 2: REGRESIÓN LINEAL
+
+**EJERCICIO 1**
+
+**modelo 1**
+
+```{r}
+library(ggplot2)
+ggplot(data, aes(x=PBI_percapita_2017, y=anemia_2017)) +
+geom_point(colour="purple") + xlab("PBI percapita") + ylab("% de niños menores de 5 años que padecen de anemiaa") +
+ggtitle("niños con anemia/PBI percápita") +
+theme_light()
+```
+
+el gráfico nos muestra una dependencia negativa. Esto demuestra que mientras más baje el PBI entonces más niños con anemia habrán. 
+```{r}
+modelo1 = lm(anemia_2017~PBI_percapita_2017, data=data)
+anova(modelo1)
+
+```
+
+```{r}
+summary(modelo1)
+```
+**interpretación:**
+vemos que el p valor es menor a 0.05, por lo que sí ayuda a explicar el modelo y es una variable que aporta al modelo
+vemos que el nivel explicativo es 27% aproximadamente. 
+por ultimo, la ecuacion es : **Y = 3.914e+01 - 4.278e-04 * X**
+por todo lo que hemos visto a través de las pruebas, podríamos entonces decir que el hecho de que haya más PBI hará que haya menos niños con anemia. 
+
+**modelo 2**
+
+```{r}
+ggplot(data, aes(x=gasto_educacion_total_2017, y=anemia_2017)) +
+geom_point(colour="lightgreen") + xlab("gasto total 2017") + ylab("% de niños menores de 5 años que padecen de anemiaa") +
+ggtitle("niños con anemia/gasto en educación total") +
+theme_light()
+```
+vemos que los datos en este gráfico son demasiado dispersos, por lo que podríamos decir que no es claro que haya una correlación. Al menos visualmente, pero en las pruebas hemos visto que si hay. es probable que el grafico se vea asi porque la correlación entre las variables es pequeña. 
+
+```{r}
+modelo2 = lm(anemia_2017~gasto_educacion_total_2017, data=data)
+anova(modelo1)
+
+```
+
+
+```{r}
+summary(modelo2)
+```
+
+**interpretación:**
+vemos que el p valor de la variable es menor a 0.05, por lo que sí ayuda a explicar el modelo y es una variable que aporta al modelo. los *** puestos por el programa indican que es bastante significativo para el mdoelo
+
+vemos que el nivel de explicación modelo es 2% aproximadamente. tiene sentido, pues cuando hicimos la prueba de correlación nos dimos cuenta de que era baja 
+por ultimo, la ecuacion es : **Y = 40.9346 - 1.9217 * X**
+
+**modelo 3**
+
+```{r}
+modelo3 = lm(anemia_2017 ~ PBI_percapita_2017 + gasto_educacion_total_2017, data)
+anova(modelo3)
+
+```
+
+
+```{r}
+summary(modelo3)
+```
+
+**interpretación:**
+vemos que ambos p valores son menores a 0.05, por lo que sí ayuda a explicar el modelo y es una variable que aporta al modelo. los *** puestos por el programa indican que es bastante significativo para el mdoelo
+
+vemos que el nivel de explicación modelo es 2.8% aproximadamente. tiene sentido, pues cuando hicimos la prueba de correlación (con gasto de educacion total) nos dimos cuenta de que era baja 
+por ultimo, la ecuacion es : **Y = (4.612e+01 - 4.210e-04 - 1.587e+00) * X** 
+
+**interpretacion de todos los modelos**
+
+Luego de hacer los tres modelos, podemos interpretar que las dos variables independientes tiene correlación y dependencia con la variable dependiente. sin embargo, hemos visto que la variable de PBI tiene más nivel explicativo que la de gasto educacion total; con 27% y 2% respectivamente. De igual manera, ninguno de los dos primeros modelos tiene un alto nivel explicativo muy alto. Con respecto al tercer modelo, vemos que el nivel explicativo disminuye pues al agregar la variable de gasto educativo total (la que tenia menos correlacion), baja mucho la confiabilidad del modelo. 
+
+**EJERCICIO 2**
+
+Para hacer la RLM, primero sacaremos la correlacion entre las varibales independientes nuevas y nuestra variable dependiente. Primero, eliminemos los NA's
+
+```{r}
+summary(data$ingresos_nosubvenciones_2017)
+summary(data$fin_educ_prim_2017)
+summary(data$inscripcion_preprimario_2017)
+```
+
+```{r}
+data = data[complete.cases(data$ingresos_nosubvenciones_2017),] 
+data = data[complete.cases(data$fin_educ_prim_2017),] 
+data = data[complete.cases(data$inscripcion_preprimario_2017),] 
+summary(data$ingresos_nosubvenciones_2017)
+summary(data$fin_educ_prim_2017)
+summary(data$inscripcion_preprimario_2017)
+```
+
+Ahora, la prueba de correlación 
+```{r}
+cor.test(data$anemia_2017,data$ingresos_nosubvenciones_2017, method = "spearman")
+```
+Vemos una correlación negativa y mediana (49.6%). Tiene sentido, pues a mientras más ingresos para la familia, habrá menos anemia. El p-value es menor a 0.05,por lo que sí es relevante
+
+```{r}
+cor.test(data$anemia_2017,data$fin_educ_prim_2017, method = "spearman")
+```
+Vemos una correlación negativa y mediana (40.6%). Tiene sentido, pues a más personas que termianan la primaria, más oportunidad de trabajo y por lo tanto un mejor sueldo, lo que ayudará a que menos niños tengan anemia, ya que, podrán estar mejor alimentados. 
+El p-value es menor a 0.05,por lo que sí es relevante
+
+
+```{r}
+cor.test(data$anemia_2017,data$inscripcion_preprimario_2017, method = "spearman")
+```
+Vemos una correlación negativa y mediana (58%). Tiene sentido, porque mientras más niños en el colegio, hay mejor control de ellos y puede que los colegios apoyen con comidas, lo que haría que el % de anemia disminuya. 
+El p-value es menor a 0.05,por lo que sí es relevante
+
+
+```{r}
+modelo4 = lm(anemia_2017 ~ PBI_percapita_2017 + gasto_educacion_total_2017 + ingresos_nosubvenciones_2017 + fin_educ_prim_2017 + inscripcion_preprimario_2017, data)
+anova(modelo3)
+```
+
+
+```{r}
+summary(modelo4)
+```
+**interpretación:**
+vemos que todos p valores son menores a 0.05, menos gastos educativos totales e ingresos, no subvenciones. 
+Podemos decir que todas las variables a excepción de esas dos ayudan a explicar el modelo; los *** puestos por el programa indican que es bastante significativo para el mdoelo
+Respecto a las otras dos variables, estas no son significativas para el modelo. 
+
+vemos que el nivel de explicación modelo es de 58% aproximadamente. Esta es una explicación mediana, la cual es confiable, pero se debe de tener en cuenta que tiene dos variables que no son significativas para el modelo. 
+
+por ultimo, la ecuacion del modelo 4 es : **Y = (8.869e+01 - 2.170e-04 + 9.501e-01 - 2.147e-01 - 4.899e-01 - 1.389e-01) * X**
+
+**interpretación final**
+tomando en cuenta todos los modelos calculados, podemos decir que el modelo 4 es el más explicativo de los modelos de regresión múltiple. esto porque su nivel explicativo es de 58% mientra que el del modelo3 es solo 2.8%. Por otro lado, ambos cuentan con variables no muy significativas en su modelo, lo que puede hacerlos un poco menos confiables. Pero al ambos tener, podemos compararlos de manera justa. Finalmente, los modelos de regresión lineal tampoco fueron muy explicativos, tan solo 27% y 2%. Por lo tanto podemos decir que el modelo 4 (con más varibales) es el mejor modelo 
+
